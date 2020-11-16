@@ -1,56 +1,102 @@
-const container = document.querySelector(".container")
-let inputValue = document.querySelector(".input")
-const add = document.querySelector('.add');
+const container = document.querySelector(".container");
 
-class ToDoItem {
-    constructor (name) {
-        this.createItem(name);
+class TodoState {
+  constructor() {
+    this.todoList = [];
+  }
+
+  addTodo(item) {
+    const todo = {
+      id: Math.random(),
+      name: item,
+      isCompleted: false
     };
-    createItem(name) {
-        let itemBox = document.createElement("div");
-        itemBox.classList.add("item");
+    this.todoList.push(todo);
+    return todo;
+  }
+  removeTodo(id) {
+    this.todoList = this.todoList.filter((item) => item.id !== id);
+  }
+  checkTodo(id) {
+    this.todoList = this.todoList.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          isCompleted: !item.isComplete
+        };
+      }
+      return item;
+    });
+  }
+}
 
-        let input = document.createElement("input")
-        input.type = "checkbox"
-        input.id = name;
+class ToDoList {
+  constructor(firstItemName) {
+    this.listState = new TodoState();
+    this.input = document.querySelector(".input");
+    this.addButton = document.querySelector(".add");
 
-        let newLabel = document.createElement("label")
-        newLabel.innerHTML = name;
-
-        input.addEventListener("click", () => {
-            if(input.checked == true) {
-                newLabel.style.textDecoration = "line-through";
-            } else {
-                newLabel.style.textDecoration = "none";
-            }
-        }) 
-        
-        let remove = document.createElement('span');
-    	remove.classList.add('material-icons');
-    	remove.innerHTML = "close";
-    	remove.addEventListener('click', () => this.remove(itemBox));
-
-    	container.appendChild(itemBox);
-        itemBox.appendChild(input);
-        itemBox.appendChild(newLabel);
-        itemBox.appendChild(remove);
-
-    }
-
-        remove(itemBox){
-            itemBox.parentNode.removeChild(itemBox);
+    if (this.addButton) {
+      this.addButton.addEventListener("click", () => {
+        if (this.input.value) {
+          this.createTodoItem(this.input.value);
         }
+      });
     }
 
-    function check(){
-        if(inputValue.value != ""){
-            new ToDoItem(inputValue.value);
-            inputValue.value = "";
-        }
+    if (firstItemName) {
+      this.createTodoItem(firstItemName);
     }
-    
-    add.addEventListener('click', check);
+  }
 
-    let ToDoList = new ToDoItem("My first ToDoList")
+  createTodoItem(name) {
+    const todo = this.listState.addTodo(name);
+    let itemBox = document.createElement("div");
+    itemBox.classList.add("item");
+    itemBox.dataset.id = todo.id;
+
+    let input = document.createElement("input");
+    input.type = "checkbox";
+    input.dataset.id = todo.id;
+    input.checked = todo.isCompleted;
+
+    let newLabel = document.createElement("label");
+    newLabel.innerHTML = name;
+
+    input.addEventListener("click", (event) => {
+      const id = event.target.getAttribute("data-id");
+      if (event.target.checked) {
+        newLabel.style.textDecoration = "line-through";
+      } else {
+        newLabel.style.textDecoration = "none";
+      }
+    });
+
+    let remove = document.createElement("span");
+    remove.classList.add("material-icons");
+    remove.innerHTML = "close";
+    remove.dataset.id = todo.id;
+    remove.addEventListener("click", (event) => {
+      let id = event.target.getAttribute("data-id");
+      if (id) {
+        this.removeTodoItem(id);
+      }
+    });
+
+    container.appendChild(itemBox);
+    itemBox.appendChild(input);
+    itemBox.appendChild(newLabel);
+    itemBox.appendChild(remove);
+    this.input.value = "";
+  }
+
+  removeTodoItem(id) {
+    this.listState.removeTodo(id);
+    const removeItem = container.querySelector(`div[data-id="${id}"]`);
+    removeItem.parentNode.removeChild(removeItem);
+  }
+}
+
+let List = new ToDoList("My first ToDoList");
 
 
